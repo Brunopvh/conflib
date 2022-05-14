@@ -1,20 +1,29 @@
 #!/usr/bin/env python3
 
-from .__main__ import (
-    HOME,
+from .common import (
     KERNEL_TYPE,
     File,
     FileReader,
     FileJson,
     mkdir,
-    touch,
-    ConfDirs,
-    AppDirs,
+    get_user_home,
     get_abspath,
+    BuilderUserDirs,
+    BuilderAppDirs,
+)
+
+from .version import (
     __version__,
     __repo__,
 )
 
-
 if KERNEL_TYPE == 'Linux':
-    from .__main__ import (add_home_in_path)
+    from .common import (
+        AppDirsLinux as AppDirs,
+        UserDirsLinux as UserDirs,
+    )
+elif KERNEL_TYPE == 'Windows':
+    from .common import (
+        AppDirsWindows as AppDirs,
+        UserDirsWindows as UserDirs,
+    )

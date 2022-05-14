@@ -556,7 +556,7 @@ class BuilderUserDirs(object):
         """
         self._user_root = False
 
-    def get_user_root(self, user_root: bool = False):
+    def build_user_root(self, user_root: bool = False):
         if os.name == 'nt':
             self._user_root = False
         elif os.name == 'posix' and os.geteuid() == 0:
@@ -583,7 +583,7 @@ class AppDirsAbstract(object):
     def __init__(self, appname: str, author: str) -> None:
         self.appname: str = appname
         self.author: str = author
-        self.user_dirs: UserDirs = BuilderUserDirs().get_user_root().build()
+        self.user_dirs: UserDirs = BuilderUserDirs().build_user_root().build()
 
     @property
     def appname(self) -> str:
@@ -613,7 +613,8 @@ class AppDirsAbstract(object):
         pass
 
     def app_json_conf(self) -> str:
-        pass
+        _file = os.path.join(self.app_config_dir(), f'{self.appname}.json')
+        return FileJson(_file)
 
     def app_script(self) -> str:
         pass
@@ -635,7 +636,7 @@ class AppDirsLinux(AppDirsAbstract):
     def __init__(self, appname: str, author: str, user_root:bool) -> None:
         super().__init__(appname, author)
         self.user_root = user_root
-        self.user_dirs: UserDirsLinux = BuilderUserDirs().get_user_root(self.user_root).build()
+        self.user_dirs: UserDirsLinux = BuilderUserDirs().build_user_root(self.user_root).build()
         
     @property
     def appname(self) -> str:
@@ -665,8 +666,8 @@ class AppDirsLinux(AppDirsAbstract):
         return os.path.join(self.app_config_dir(), f'{self.appname}.conf')
 
     def app_json_conf(self) -> FileJson:
-        _file = File(os.path.join(self.app_config_dir(), f'{self.appname}.json'))
-        return FileJson(File)
+        _file = os.path.join(self.app_config_dir(), f'{self.appname}.json')
+        return FileJson(_file)
 
     def app_script(self) -> str:
         return get_abspath(os.path.join(self.user_dirs.binary_dir(), self.appname))
@@ -677,16 +678,6 @@ class AppDirsLinux(AppDirsAbstract):
         Retorna o caminho onde o icone deve estar no sistema.
         """
         return get_abspath(os.path.join(self.user_dirs.icon_dir(), file_icon))
-
-    def get_temp_dir(self, *, create=False) -> str:
-        """
-           Retorna um diretório temporário.
-        """
-        return self.user_dirs.tempDir(create=create)
-
-    def get_temp_file(self, create=False) -> None:
-        """Retorna um arquivo temporário."""
-        return self.user_dirs.tempFile(create=create)
 
     def app_desktop_entry(self, file_desktop) -> str:
         """
@@ -707,11 +698,10 @@ class AppDirsLinux(AppDirsAbstract):
 
 
 
-
 class AppDirsWindows(AppDirsAbstract):
     def __init__(self, appname: str, author: str) -> None:
         super().__init__(appname, author)
-        
+
     @property
     def appname(self) -> str:
         return self._appname
@@ -739,10 +729,6 @@ class AppDirsWindows(AppDirsAbstract):
     def app_file_conf(self) -> str:
         return os.path.join(self.app_config_dir(), f'{self.appname}.conf')
 
-    def app_json_conf(self) -> FileJson:
-        _file = File(os.path.join(self.app_config_dir(), f'{self.appname}.json'))
-        return FileJson(File)
-
     def app_script(self) -> str:
         return get_abspath(os.path.join(self.user_dirs.binary_dir(), self.appname))
 
@@ -753,23 +739,11 @@ class AppDirsWindows(AppDirsAbstract):
         """
         return get_abspath(os.path.join(self.user_dirs.icon_dir(), file_icon))
 
-    def get_temp_dir(self, *, create=False) -> str:
-        """
-           Retorna um diretório temporário.
-        """
-        return self.user_dirs.tempDir(create=create)
-
-    def get_temp_file(self, create=False) -> None:
-        """Retorna um arquivo temporário."""
-        return self.user_dirs.tempFile(create=create)
-
-   
     def create_dirs(self) -> bool:
         """
          Cria os diretórios de configuração.
         """
         pass
-
 
 
 class BuilderAppDirs(object):
@@ -782,16 +756,15 @@ class BuilderAppDirs(object):
         self._author = None
         self._user_root = False
         
-
-    def get_author(self, author: str):
+    def build_author(self, author: str):
         self._author = author
         return self
 
-    def get_appname(self, appname: str):
+    def build_appname(self, appname: str):
         self._appname = appname
         return self
 
-    def get_user_root(self, user_root: bool = False):
+    def build_user_root(self, user_root: bool = False):
         if os.name != 'posix':
             return self
         if os.geteuid() == 0:
@@ -804,7 +777,6 @@ class BuilderAppDirs(object):
         if self._appname is None:
             raise Exception(f'{__class__.__name__} appname não pode ser None')            
 
-
         if KERNEL_TYPE == 'Linux':
             return AppDirsLinux(self._appname, self._author, self._user_root)
         elif KERNEL_TYPE == 'Windows':
@@ -816,12 +788,9 @@ class BuilderAppDirs(object):
 
 
 def main():
+    #app: AppDirsAbstract = BuilderAppDirs().build_user_root().build_appname('TesteApp').build_author('BrunoChaves').build()
+    pass
     
-    app: AppDirsAbstract = BuilderAppDirs().get_user_root().get_appname('TesteApp').get_author('BrunoChaves').build()
-
-    print(app.app_cache_dir())
-    print(app.app_config_dir())
-    print(app.app_file_conf())
 
 
 if __name__ == '__main__':
